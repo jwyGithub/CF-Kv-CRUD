@@ -16,9 +16,9 @@ compatibility_flags = ["nodejs_compat"]
 # - https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 # Note: Use secrets to store sensitive data.
 # - https://developers.cloudflare.com/workers/configuration/secrets/
-[vars]
-AUTH_TOKEN = ""
-KV_KEYS = ""
+# [vars]
+# AUTH_TOKEN = ""
+# KV_KEYS = ""
 
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
@@ -70,13 +70,13 @@ KV_KEYS = ""
 
 # Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#kv-namespaces
-[[kv_namespaces]]
-binding = ""
-id = ""
+# [[kv_namespaces]]
+# binding = ""
+# id = ""
 
-[[kv_namespaces]]
-binding = ""
-id = ""
+# [[kv_namespaces]]
+# binding = ""
+# id = ""
 
 
 # Bind an mTLS certificate. Use to present a client certificate when communicating with another service.
