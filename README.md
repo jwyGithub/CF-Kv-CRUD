@@ -1,7 +1,3 @@
----
-title: cloudflare-kv-api
----
-
 # cloudflare-kv-api
 
 ## GET getKvKeys
