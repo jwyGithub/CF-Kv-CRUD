@@ -34,7 +34,7 @@ export class Router {
 
     async match(options: IMatchOptions<Env>): Promise<Response> {
         try {
-            const { path, request, env, fileConvert, staticPath } = options;
+            const { path, request, env, staticPath } = options;
             const route = this.routes.find(route => route.path === path);
             if (route) {
                 const check = new Check(request, env);
@@ -42,9 +42,9 @@ export class Router {
                 const onError = route.onError || ((reason, _request, _env) => ServiceResponse.onBadRequest(reason.message, reason.status));
                 const enter = beforeEnter(check, Check);
                 if (enter.isCanEnter) {
-                    return route.excute(request, env, fileConvert);
+                    return route.excute(request, env);
                 } else {
-                    return onError(enter, request, env, fileConvert);
+                    return onError(enter, request, env);
                 }
             } else if (matchStatic(path, staticPath)) {
                 const { kvKey, fileName } = getMatchPath(path, staticPath);

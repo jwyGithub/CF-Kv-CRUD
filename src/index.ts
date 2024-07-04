@@ -1,6 +1,5 @@
 import { Router } from './router/router';
 import routes from './router/route';
-import fileConvertWasm from './wasm/file_converter.wasm';
 import { ServiceResponse } from './service';
 import { getStaticPath } from './utils/utils';
 
@@ -24,14 +23,12 @@ export default {
     async fetch(request, env): Promise<Response> {
         try {
             await beforeCheck(env);
-            const fileConvert = (await WebAssembly.instantiate(fileConvertWasm)).exports;
             const { pathname } = new URL(request.url);
             const staticPath = getStaticPath(env);
             return router.match({
                 path: pathname,
                 request,
                 env,
-                fileConvert,
                 staticPath
             });
         } catch (error: any) {
