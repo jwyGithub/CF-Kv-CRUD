@@ -1,0 +1,23 @@
+{
+    "name": "cf-kv-crud",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "deploy": "wrangler deploy",
+        "dev": "wrangler dev",
+        "start": "wrangler dev",
+        "test": "vitest",
+        "cf-typegen": "wrangler types"
+    },
+    "devDependencies": {
+        "@cloudflare/vitest-pool-workers": "^0.4.5",
+        "@cloudflare/workers-types": "^4.20240620.0",
+        "@jiangweiye/eslint-config": "0.1.6-beta.1",
+        "@jiangweiye/prettier-config": "^0.0.14",
+        "eslint": "^9.6.0",
+        "prettier": "^3.3.2",
+        "typescript": "^5.4.5",
+        "vitest": "1.5.0",
+        "wrangler": "^3.60.3"
+    }
+}
