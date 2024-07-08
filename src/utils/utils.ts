@@ -60,7 +60,30 @@ export function getMimeType(mime: string) {
         png: { mimeType: 'image/png', type: 'arrayBuffer' },
         svg: { mimeType: 'image/svg+xml', type: 'text' },
         txt: { mimeType: 'text/plain', type: 'text' },
-        xml: { mimeType: 'application/xml', type: 'text' }
+        xml: { mimeType: 'application/xml', type: 'text' },
+        exe: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        pdf: { mimeType: 'application/pdf', type: 'arrayBuffer' },
+        zip: { mimeType: 'application/zip', type: 'arrayBuffer' },
+        tar: { mimeType: 'application/x-tar', type: 'arrayBuffer' },
+        gz: { mimeType: 'application/gzip', type: 'arrayBuffer' },
+        tgz: { mimeType: 'application/gzip', type: 'arrayBuffer' },
+        mp4: { mimeType: 'video/mp4', type: 'arrayBuffer' },
+        mp3: { mimeType: 'audio/mp3', type: 'arrayBuffer' },
+        wav: { mimeType: 'audio/wav', type: 'arrayBuffer' },
+        ogg: { mimeType: 'audio/ogg', type: 'arrayBuffer' },
+        webm: { mimeType: 'video/webm', type: 'arrayBuffer' },
+        webp: { mimeType: 'image/webp', type: 'arrayBuffer' },
+        woff: { mimeType: 'font/woff', type: 'arrayBuffer' },
+        woff2: { mimeType: 'font/woff2', type: 'arrayBuffer' },
+        eot: { mimeType: 'application/vnd.ms-fontobject', type: 'arrayBuffer' },
+        ttf: { mimeType: 'font/ttf', type: 'arrayBuffer' },
+        otf: { mimeType: 'font/otf', type: 'arrayBuffer' },
+        bmp: { mimeType: 'image/bmp', type: 'arrayBuffer' },
+        gif: { mimeType: 'image/gif', type: 'arrayBuffer' },
+        msi: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        dmg: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        pkg: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        deb: { mimeType: 'application/octet-stream', type: 'arrayBuffer' }
     };
 
     return mimeTypes[mime] || 'text/plain';

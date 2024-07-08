@@ -54,7 +54,7 @@ export class Router {
                     const content = await env[kvKey].get(fileName, type);
                     return new Response(content, {
                         headers: {
-                            'Content-Type': mimeType,
+                            'Content-Type': mimeType ?? 'text/plain',
                             'Cache-Control': 'public, max-age=86400',
                             'Access-Control-Allow-Origin': '*'
                         }
