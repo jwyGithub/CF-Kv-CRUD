@@ -41,6 +41,13 @@ var SERVICE_CONFIG = {
     NOT_ALLOWED: {
         CODE: 405,
         MESSAGE: 'method not allowed'
+    },
+    /**
+     * Represents a conflict response.
+     */
+    OPTIONS: {
+        CODE: 200,
+        MESSAGE: 'options'
     }
 };
 var CONTENT_TYPE = {
@@ -59,7 +66,15 @@ var CONTENT_TYPE = {
     /**
      * Represents the plain text content type.
      */
-    TEXT: 'text/plain'
+    TEXT: 'text/plain',
+    /**
+     * Represents the CSS content type.
+     */
+    CSS: 'text/css',
+    /**
+     * Represents the JavaScript content type.
+     */
+    JAVA_SCRIPT: 'text/javascript'
 };
 
 // src/plugins/Check.ts
@@ -141,7 +156,30 @@ function getMimeType(mime) {
         png: { mimeType: 'image/png', type: 'arrayBuffer' },
         svg: { mimeType: 'image/svg+xml', type: 'text' },
         txt: { mimeType: 'text/plain', type: 'text' },
-        xml: { mimeType: 'application/xml', type: 'text' }
+        xml: { mimeType: 'application/xml', type: 'text' },
+        exe: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        pdf: { mimeType: 'application/pdf', type: 'arrayBuffer' },
+        zip: { mimeType: 'application/zip', type: 'arrayBuffer' },
+        tar: { mimeType: 'application/x-tar', type: 'arrayBuffer' },
+        gz: { mimeType: 'application/gzip', type: 'arrayBuffer' },
+        tgz: { mimeType: 'application/gzip', type: 'arrayBuffer' },
+        mp4: { mimeType: 'video/mp4', type: 'arrayBuffer' },
+        mp3: { mimeType: 'audio/mp3', type: 'arrayBuffer' },
+        wav: { mimeType: 'audio/wav', type: 'arrayBuffer' },
+        ogg: { mimeType: 'audio/ogg', type: 'arrayBuffer' },
+        webm: { mimeType: 'video/webm', type: 'arrayBuffer' },
+        webp: { mimeType: 'image/webp', type: 'arrayBuffer' },
+        woff: { mimeType: 'font/woff', type: 'arrayBuffer' },
+        woff2: { mimeType: 'font/woff2', type: 'arrayBuffer' },
+        eot: { mimeType: 'application/vnd.ms-fontobject', type: 'arrayBuffer' },
+        ttf: { mimeType: 'font/ttf', type: 'arrayBuffer' },
+        otf: { mimeType: 'font/otf', type: 'arrayBuffer' },
+        bmp: { mimeType: 'image/bmp', type: 'arrayBuffer' },
+        gif: { mimeType: 'image/gif', type: 'arrayBuffer' },
+        msi: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        dmg: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        pkg: { mimeType: 'application/octet-stream', type: 'arrayBuffer' },
+        deb: { mimeType: 'application/octet-stream', type: 'arrayBuffer' }
     };
     return mimeTypes[mime] || 'text/plain';
 }
@@ -215,6 +253,13 @@ var ServiceResponse = class {
             statusText: reason
         });
     }
+    static onOptions() {
+        return new Response(null, {
+            headers: makeHeader(),
+            status: SERVICE_CONFIG.OPTIONS.CODE,
+            statusText: SERVICE_CONFIG.OPTIONS.MESSAGE
+        });
+    }
 };
 
 // src/router/router.ts
@@ -245,7 +290,7 @@ var Router = class {
                     const content = await env[kvKey].get(fileName, type);
                     return new Response(content, {
                         headers: {
-                            'Content-Type': mimeType,
+                            'Content-Type': mimeType ?? 'text/plain',
                             'Cache-Control': 'public, max-age=86400',
                             'Access-Control-Allow-Origin': '*'
                         }
@@ -386,11 +431,12 @@ var KVController = class {
     async getAll() {
         const keys = await this.kv.list();
         const values = await Promise.all(keys.keys.map(key => this.kv.get(key.name, 'text')));
-        const result = {};
-        keys.keys.forEach((key, index) => {
-            result[key.name] = values[index];
+        return keys.keys.map((key, index) => {
+            return {
+                key: key.name,
+                value: encodeURIComponent(values[index] || '')
+            };
         });
-        return result;
     }
     /**
      * Retrieves all the keys from the KV store.
@@ -582,9 +628,17 @@ var route_default = [
         path: '/api/getList',
         async excute(request, env) {
             try {
+                const { origin } = new URL(request.url);
                 const kvController = new KV_default(env[request.headers.get('kv')]);
                 const list = await kvController.getAll();
-                return ServiceResponse.onSuccessJson(list);
+                const response = list.map(item => {
+                    return {
+                        ...item,
+                        download: `${origin}/api/download?file=${item.key}`,
+                        preview: `${origin}/${request.headers.get('kv')}/static/${item.key}`
+                    };
+                });
+                return ServiceResponse.onSuccessJson(response);
             } catch (error) {
                 return ServiceResponse.onError(error.message);
             }
@@ -716,6 +770,9 @@ var src_default = {
             await beforeCheck(env);
             const { pathname } = new URL(request.url);
             const staticPath = getStaticPath(env);
+            if (request.method === 'OPTIONS') {
+                return ServiceResponse.onOptions();
+            }
             return router.match({
                 path: pathname,
                 request,
