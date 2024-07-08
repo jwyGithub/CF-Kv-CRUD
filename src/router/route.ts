@@ -211,9 +211,17 @@ export default [
         path: '/api/getList',
         async excute(request, env) {
             try {
+                const { origin } = new URL(request.url);
                 const kvController = new KVController(env[request.headers.get('kv')!]);
                 const list = await kvController.getAll();
-                return ServiceResponse.onSuccessJson(list);
+                const response = list.map(item => {
+                    return {
+                        ...item,
+                        download: `${origin}/api/download?file=${item.key}`,
+                        preview: `${origin}/${request.headers.get('kv')}/static/${item.key}`
+                    };
+                });
+                return ServiceResponse.onSuccessJson(response);
             } catch (error: any) {
                 return ServiceResponse.onError(error.message);
             }

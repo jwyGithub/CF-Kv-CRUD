@@ -78,5 +78,15 @@ export const CONTENT_TYPE: Record<ICONTENT_TYPE_KEY, ICONTENT_TYPE> = {
     /**
      * Represents the plain text content type.
      */
-    TEXT: 'text/plain'
+    TEXT: 'text/plain',
+
+    /**
+     * Represents the CSS content type.
+     */
+    CSS: 'text/css',
+
+    /**
+     * Represents the JavaScript content type.
+     */
+    JAVA_SCRIPT: 'text/javascript'
 };

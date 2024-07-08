@@ -142,14 +142,16 @@ class KVController {
         }
     }
 
-    async getAll(): Promise<Record<string, string | null>> {
+    async getAll(): Promise<Record<'key' | 'value', string | null>[]> {
         const keys = await this.kv.list();
         const values = await Promise.all(keys.keys.map(key => this.kv.get(key.name, 'text')));
-        const result: Record<string, string | null> = {};
-        keys.keys.forEach((key, index) => {
-            result[key.name] = values[index];
+
+        return keys.keys.map((key, index) => {
+            return {
+                key: key.name,
+                value: encodeURIComponent(values[index] || '')
+            };
         });
-        return result;
     }
 
     /**
