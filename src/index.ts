@@ -25,6 +25,11 @@ export default {
             await beforeCheck(env);
             const { pathname } = new URL(request.url);
             const staticPath = getStaticPath(env);
+
+            if (request.method === 'OPTIONS') {
+                return ServiceResponse.onOptions();
+            }
+
             return router.match({
                 path: pathname,
                 request,

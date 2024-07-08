@@ -69,4 +69,12 @@ export class ServiceResponse {
             statusText: reason
         });
     }
+
+    public static onOptions(): Response {
+        return new Response(null, {
+            headers: makeHeader(),
+            status: SERVICE_CONFIG.OPTIONS.CODE,
+            statusText: SERVICE_CONFIG.OPTIONS.MESSAGE
+        });
+    }
 }

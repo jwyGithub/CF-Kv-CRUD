@@ -45,6 +45,14 @@ export const SERVICE_CONFIG: Record<ISERVICE_RESPONSE, { CODE: ISERVICE_CODE; ME
     NOT_ALLOWED: {
         CODE: 405,
         MESSAGE: 'method not allowed'
+    },
+
+    /**
+     * Represents a conflict response.
+     */
+    OPTIONS: {
+        CODE: 200,
+        MESSAGE: 'options'
     }
 };
 
