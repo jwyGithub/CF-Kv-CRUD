@@ -1,4 +1,4 @@
-import KVController from '../plugins/KV';
+import KVController, { VALUE_TYPE } from '../plugins/KV';
 import { ServiceResponse } from '../service';
 import { CONTENT_TYPE } from '../service/serviceConfig';
 import { MAX_FILE_SIZE, checkFileSize, getBody } from '../utils/utils';
@@ -8,8 +8,8 @@ export default [
     {
         path: '/',
         async excute(request, _env) {
-            // const indexHtml = await fetch(`${request.url}static/index.html`).then(res => res.text());
-            return new Response(request.url, {
+            const indexHtml = await fetch(_env.HOME_PAGE).then(res => res.text());
+            return new Response(indexHtml, {
                 status: 200,
                 headers: {
                     'Content-Type': 'text/html',
@@ -80,7 +80,7 @@ export default [
                     return ServiceResponse.onBadRequest('KEY Not Found');
                 }
                 const kvController = new KVController(env[request.headers.get('kv')!]);
-                const value = await kvController.getItem(key);
+                const { value } = await kvController.getItem<string>(key);
                 if (value === null) {
                     return ServiceResponse.onNotFound('Not Found');
                 }
@@ -116,7 +116,7 @@ export default [
                 }
 
                 const kvController = new KVController(env[request.headers.get('kv')!]);
-                await kvController.updateItem(body.key, body.value);
+                await kvController.updateItem(body.key, body.value, VALUE_TYPE.TEXT);
                 const updatedValue = await kvController.getItem(body.key);
                 return ServiceResponse.onSuccessJson({ key: body.key, value: updatedValue });
             } catch (error: any) {
@@ -150,8 +150,8 @@ export default [
 
                 const kvController = new KVController(env[request.headers.get('kv')!]);
                 await kvController.addItem(body.key, body.value);
-                const updatedValue = await kvController.getItem(body.key);
-                return ServiceResponse.onSuccessJson({ key: body.key, value: updatedValue });
+                const { value } = await kvController.getItem(body.key);
+                return ServiceResponse.onSuccessJson({ key: body.key, value });
             } catch (error: any) {
                 return ServiceResponse.onError(error.message);
             }
@@ -285,7 +285,7 @@ export default [
                 const fileContent = new Uint8Array(arrayBuffer);
 
                 const kvController = new KVController(env[request.headers.get('kv')!]);
-                await kvController.updateItem(fileName, fileContent);
+                await kvController.updateItem(fileName, fileContent, VALUE_TYPE.STREAM);
                 const { origin } = new URL(request.url);
                 return ServiceResponse.onSuccessJson({
                     fileName,
@@ -328,12 +328,12 @@ export default [
 
                 const kvController = new KVController(_env[request.headers.get('kv')!]);
 
-                const fileContent = await kvController.getItem<ArrayBuffer>(fileName, 'arrayBuffer');
-                if (!fileContent) {
+                const { value } = await kvController.getItem<ArrayBuffer>(fileName, 'arrayBuffer');
+                if (!value) {
                     return ServiceResponse.onNotFound('File not found');
                 }
 
-                return ServiceResponse.onSuccessStream(fileContent, 'Download Success', CONTENT_TYPE.STREAM);
+                return ServiceResponse.onSuccessStream(value, 'Download Success', CONTENT_TYPE.STREAM);
             } catch (error: any) {
                 return ServiceResponse.onError(error.message);
             }

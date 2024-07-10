@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .notify-container {
+            width: 500px;
+            box-shadow: 0 0 10px 5px #ccc;
+            border-radius: 10px;
+            position: fixed;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            transition: all 0.5s linear;
+            transform: translateY(-100px);
+        }
+        .content-container {
+            text-align: center;
+            line-height: 30px;
+            font-size: 16px;
+        }
+    </style>
+    <body>
+        <div>
+            <span>kv列表：</span>
+            <select name="kv-list" id="kv-list"> </select>
+        </div>
+
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>文件名</th>
+                        <th>文件内容</th>
+                        <th>下载地址</th>
+                        <th>预览地址</th>
+                        <th>delete</th>
+                    </tr>
+                </thead>
+
+                <tbody> </tbody
+            ></table>
+        </div>
+
+        <script>
+            class Utils {
+                static BASE_URL = location.href;
+
+                static httpGet(url, params) {
+                    const urlParams = new URLSearchParams(params);
+                    const token = sessionStorage.getItem('Authorization');
+                    const kv = sessionStorage.getItem('kv');
+                    return fetch(`${Utils.BASE_URL}${url}?${urlParams.toString()}`, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: token,
+                            kv: kv,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(res => res.json())
+                        .catch(err => {
+                            console.log(err, `err`);
+                        });
+                }
+
+                static httpPost(url, data) {
+                    const token = sessionStorage.getItem('Authorization');
+                    const kv = sessionStorage.getItem('kv');
+                    return fetch(`${Utils.BASE_URL}${url}`, {
+                        method: 'POST',
+                        headers: {
+                            Authorization: token,
+                            kv: kv,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                        .then(res => res.json())
+                        .catch(err => {
+                            console.log(err, `err`);
+                        });
+                }
+
+                static httpPostForm(url, data) {
+                    const form = new FormData();
+                    Object.keys(data).forEach(key => {
+                        form.append(key, data[key]);
+                    });
+                    return fetch(`${Utils.BASE_URL}${url}`, {
+                        method: 'POST',
+                        headers: {
+                            Authorization: token,
+                            kv: kv,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: form
+                    }).then(res => res.json());
+                }
+            }
+        </script>
+
+        <script>
+            const select = document.getElementById('kv-list');
+
+            select.addEventListener('change', async e => {
+                sessionStorage.setItem('kv', e.target.value);
+                getTableList();
+            });
+
+            async function getAuthToken() {
+                if (sessionStorage.getItem('Authorization')) {
+                    return sessionStorage.getItem('Authorization');
+                } else {
+                    const authToken = prompt('Enter your Cloudflare Auth Token');
+                    if (!authToken) {
+                        alert('Please enter a valid auth token');
+                        return;
+                    }
+                    const res = await Utils.httpPost('/api/verifyToken', { token: authToken });
+
+                    if (res.status !== 200) {
+                        alert(res.message);
+                    } else {
+                        sessionStorage.setItem('Authorization', authToken);
+                        return authToken;
+                    }
+                }
+            }
+
+            async function getKvList() {
+                const res = await Utils.httpGet('/api/getKvList');
+                if (res.status !== 200) {
+                    alert(res.message);
+                } else {
+                    sessionStorage.setItem('kv', res.data[0].value);
+                    return res.data;
+                }
+            }
+
+            function renderKvList(list = []) {
+                list.forEach(kv => {
+                    const option = document.createElement('option');
+                    option.value = kv.value;
+                    option.text = kv.label;
+                    select.appendChild(option);
+                });
+            }
+
+            function renderContent(list = []) {
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = '';
+
+                list.forEach(item => {
+                    const tr = document.createElement('tr');
+
+                    const td1 = document.createElement('td');
+                    td1.innerText = item.key;
+                    tr.appendChild(td1);
+
+                    const td2 = document.createElement('td');
+
+                    const textArea = document.createElement('textarea');
+                    textArea.style.width = '100%';
+                    textArea.style.height = '100px';
+                    textArea.value = decodeURIComponent(item.value);
+                    td2.appendChild(textArea);
+                    tr.appendChild(td2);
+
+                    const td3 = document.createElement('td');
+                    const a3 = document.createElement('a');
+                    a3.href = item.download;
+                    a3.innerText = 'download';
+                    td3.appendChild(a3);
+                    tr.appendChild(td3);
+
+                    const td4 = document.createElement('td');
+                    const a4 = document.createElement('a');
+                    a4.href = item.preview;
+                    a4.innerText = 'preview';
+                    td4.appendChild(a4);
+                    tr.appendChild(td4);
+
+                    const td5 = document.createElement('td');
+                    const button = document.createElement('button');
+                    button.innerText = 'delete';
+                    button.onclick = async () => {
+                        const res = await Utils.httpPost('/api/delete', {
+                            key: item.key
+                        });
+                        if (res.status !== 200) {
+                            alert(res.message);
+                        } else {
+                            getTableList();
+                        }
+                    };
+                    td5.appendChild(button);
+                    tr.appendChild(td5);
+
+                    tbody.appendChild(tr);
+                });
+            }
+
+            async function init() {
+                const token = await getAuthToken();
+
+                const kvList = await getKvList(token);
+
+                renderKvList(kvList);
+
+                getTableList();
+            }
+
+            async function getTableList() {
+                const res = await Utils.httpGet('/api/getList');
+                renderContent(res.data);
+            }
+
+            init();
+        </script>
+    </body>
+</html>

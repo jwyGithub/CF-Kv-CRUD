@@ -1,7 +1,29 @@
+export const VALUE_TYPE = {
+    TEXT: 'TEXT',
+    STREAM: 'STREAM'
+};
+
 class KVController {
     private kv: KVNamespace<string>;
+    private kvConfigKey: string = 'KV_NAMESPACE_CONFIG';
     constructor(kv: KVNamespace) {
         this.kv = kv;
+    }
+
+    async setKvConfig(config: { key: string; valueType: string }) {
+        const preConfig = (await this.getKvConfig()) || [];
+        const item = preConfig.find((item: { key: string }) => item.key === config.key);
+        if (item) {
+            item.valueType = config.valueType;
+        } else {
+            preConfig.push(config);
+        }
+        await this.kv.put(this.kvConfigKey, JSON.stringify(preConfig));
+    }
+
+    async getKvConfig(): Promise<Array<{ key: string; valueType: string }>> {
+        const config = (await this.kv.get(this.kvConfigKey)) || '[]';
+        return JSON.parse(config);
     }
 
     async hasKey(key: string): Promise<boolean> {
@@ -27,6 +49,7 @@ class KVController {
             if (await this.hasKey(key)) {
                 throw new Error(`Key ${key} already exists`);
             }
+            await this.setKvConfig({ key, valueType: VALUE_TYPE.TEXT });
             await this.kv.put(key, value, options);
         } catch (error: any) {
             throw new Error(error);
@@ -67,9 +90,11 @@ class KVController {
     async updateItem(
         key: string,
         value: string | ArrayBuffer | ArrayBufferView | ReadableStream,
+        valueType: string = VALUE_TYPE.TEXT,
         options?: KVNamespacePutOptions
     ): Promise<void> {
         try {
+            await this.setKvConfig({ key, valueType });
             await this.kv.put(key, value, options);
         } catch (error: any) {
             throw new Error(error);
@@ -84,10 +109,15 @@ class KVController {
      * @returns A Promise that resolves to the value associated with the key, or `null` if the key does not exist.
      * @throws If an error occurs while retrieving the value.
      */
-    async getItem<T>(key: string, ...options: any[]): Promise<T | null> {
+    async getItem<T>(key: string, ...options: any[]): Promise<{ value: T | null; valueType: string }> {
         try {
+            const kvConfig = await this.getKvConfig();
+            const config = kvConfig.find((item: { key: string }) => item.key === key);
             const value = await this.kv.get<T>(key, ...options);
-            return value;
+            return {
+                value,
+                valueType: config?.valueType || VALUE_TYPE.TEXT
+            };
         } catch (error: any) {
             throw new Error(error);
         }
@@ -142,14 +172,21 @@ class KVController {
         }
     }
 
-    async getAll(): Promise<Record<'key' | 'value', string | null>[]> {
-        const keys = await this.kv.list();
-        const values = await Promise.all(keys.keys.map(key => this.kv.get(key.name, 'text')));
+    async getAll(): Promise<Record<'key' | 'value', string | null | ArrayBuffer>[]> {
+        const kvConfig = await this.getKvConfig();
+        const { keys } = await this.kv.list();
+        const filterKeys = keys.filter(key => key.name !== this.kvConfigKey);
+        const values = await Promise.all(
+            filterKeys.map(key => {
+                const { valueType } = kvConfig.find((item: { key: string }) => item.key === key.name) || { valueType: VALUE_TYPE.TEXT };
+                return valueType === VALUE_TYPE.TEXT ? this.kv.get(key.name, 'text') : this.kv.get(key.name, 'arrayBuffer');
+            })
+        );
 
-        return keys.keys.map((key, index) => {
+        return filterKeys.map((key, index) => {
             return {
                 key: key.name,
-                value: encodeURIComponent(values[index] || '')
+                value: values[index] instanceof ArrayBuffer ? '暂不支持查看，请下载后查看' : values[index]
             };
         });
     }
@@ -159,8 +196,9 @@ class KVController {
      * @returns A promise that resolves to an array of strings representing the keys.
      */
     async getKeys(): Promise<string[]> {
-        const keys = await this.kv.list();
-        return keys.keys.map(key => key.name);
+        const { keys } = await this.kv.list();
+        const filterKeys = keys.filter(key => key.name !== this.kvConfigKey);
+        return filterKeys.map(key => key.name);
     }
 }
 
