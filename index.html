@@ -79,7 +79,7 @@
 
         <script>
             class Utils {
-                static BASE_URL = location.href;
+                static BASE_URL = location.href.endsWith('/') ? location.href : `${location.href}/`;
 
                 static formatApi(url) {
                     return url.replace(/\/\//g, '/');
