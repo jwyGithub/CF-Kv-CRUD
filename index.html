@@ -82,6 +82,7 @@
                 static BASE_URL = location.href.endsWith('/') ? location.href : `${location.href}/`;
 
                 static formatApi(url) {
+                    console.log(url);
                     return url.replace(/\/\//g, '/');
                 }
 
