@@ -81,11 +81,15 @@
             class Utils {
                 static BASE_URL = location.href;
 
+                static formatApi(url) {
+                    return url.replace(/\/\//g, '/');
+                }
+
                 static httpGet(url, params) {
                     const urlParams = new URLSearchParams(params);
                     const token = sessionStorage.getItem('Authorization');
                     const kv = sessionStorage.getItem('kv');
-                    return fetch(`${Utils.BASE_URL}${url}?${urlParams.toString()}`, {
+                    return fetch(`${Utils.formatApi(`${Utils.BASE_URL}${url}`)}?${urlParams.toString()}`, {
                         method: 'GET',
                         headers: {
                             Authorization: token,
@@ -102,7 +106,7 @@
                 static httpPost(url, data) {
                     const token = sessionStorage.getItem('Authorization');
                     const kv = sessionStorage.getItem('kv');
-                    return fetch(`${Utils.BASE_URL}${url}`, {
+                    return fetch(Utils.formatApi(`${Utils.BASE_URL}${url}`), {
                         method: 'POST',
                         headers: {
                             Authorization: token,
@@ -122,7 +126,7 @@
                     Object.keys(data).forEach(key => {
                         form.append(key, data[key]);
                     });
-                    return fetch(`${Utils.BASE_URL}${url}`, {
+                    return fetch(Utils.formatApi(`${Utils.BASE_URL}${url}`), {
                         method: 'POST',
                         headers: {
                             Authorization: token,
