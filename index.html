@@ -137,6 +137,14 @@
                         body: form
                     }).then(res => res.json());
                 }
+
+                static decode(d) {
+                    try {
+                        return decodeURIComponent(d);
+                    } catch {
+                        return d;
+                    }
+                }
             }
         </script>
 
@@ -203,7 +211,7 @@
                     const textArea = document.createElement('textarea');
                     textArea.style.width = '100%';
                     textArea.style.height = '100px';
-                    textArea.value = decodeURIComponent(item.value);
+                    textArea.value = Utils.decode(item.value);
                     td2.appendChild(textArea);
                     tr.appendChild(td2);
 
