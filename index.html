@@ -203,6 +203,7 @@
                     const tr = document.createElement('tr');
 
                     const td1 = document.createElement('td');
+                    td1.style.width = '100px';
                     td1.innerText = item.key;
                     tr.appendChild(td1);
 
@@ -216,6 +217,7 @@
                     tr.appendChild(td2);
 
                     const td3 = document.createElement('td');
+                    td3.style.width = '200px';
                     const a3 = document.createElement('a');
                     a3.href = item.download;
                     a3.innerText = item.download;
@@ -223,6 +225,7 @@
                     tr.appendChild(td3);
 
                     const td4 = document.createElement('td');
+                    td4.style.width = '200px';
                     const a4 = document.createElement('a');
                     a4.href = item.preview;
                     a4.innerText = item.preview;
