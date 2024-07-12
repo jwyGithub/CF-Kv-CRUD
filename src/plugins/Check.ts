@@ -22,6 +22,11 @@ export class Check {
         return false;
     }
 
+    public kv() {
+        const kv = this.request.headers.get('kv');
+        return kv && kv !== null;
+    }
+
     public static rejectMethodEnter(): IEnterError {
         return { isCanEnter: false, message: SERVICE_CONFIG.NOT_ALLOWED.MESSAGE, status: SERVICE_CONFIG.NOT_ALLOWED.CODE };
     }

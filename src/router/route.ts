@@ -8,15 +8,20 @@ export default [
     {
         path: '/',
         async excute(request, _env) {
-            const indexHtml = await fetch(_env.HOME_PAGE).then(res => res.text());
-            return new Response(indexHtml, {
-                status: 200,
-                headers: {
-                    'Content-Type': 'text/html',
-                    'Cache-Control': 'public, max-age=86400',
-                    'Access-Control-Allow-Origin': '*'
-                }
-            });
+            try {
+                const HOME_PAGE = _env.HOME_PAGE || 'https://raw.githubusercontent.com/jwyGithub/cf-kv-crud/main/index.html';
+                const indexHtml = await fetch(HOME_PAGE).then(res => res.text());
+                return new Response(indexHtml, {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'text/html',
+                        'Cache-Control': 'public, max-age=86400',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                });
+            } catch (error: any) {
+                return ServiceResponse.onError(error.message);
+            }
         }
     },
     {
@@ -99,7 +104,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 
@@ -132,7 +137,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 
@@ -166,7 +171,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 
@@ -200,7 +205,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 
@@ -235,7 +240,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 
@@ -262,7 +267,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 
@@ -306,7 +311,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 
@@ -348,7 +353,7 @@ export default [
                 return CheckEnter.rejectTokenEnter();
             }
 
-            if (!check.request.headers.get('kv')) {
+            if (!check.kv()) {
                 return CheckEnter.rejectNotKVEnter();
             }
 

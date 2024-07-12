@@ -56,7 +56,8 @@ export class Router {
                         headers: {
                             'Content-Type': mimeType ?? 'text/plain',
                             'Cache-Control': 'public, max-age=86400',
-                            'Access-Control-Allow-Origin': '*'
+                            'Access-Control-Allow-Origin': '*',
+                            'Content-Encoding': 'utf-8'
                         }
                     });
                 }

@@ -7,6 +7,7 @@ class KVController {
     private kv: KVNamespace<string>;
     private kvConfigKey: string = 'KV_NAMESPACE_CONFIG';
     constructor(kv: KVNamespace) {
+        if (!kv) throw new Error('KV Namespace not found');
         this.kv = kv;
     }
 

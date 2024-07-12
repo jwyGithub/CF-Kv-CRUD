@@ -11,6 +11,7 @@ export function makeHeader(contentType: ICONTENT_TYPE = CONTENT_TYPE.JSON, allow
     header.set('Access-Control-Allow-Origin', allowOrigin);
     header.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     header.set('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, kv');
+    header.set('Content-Encoding', 'utf-8');
 
     return header;
 }
