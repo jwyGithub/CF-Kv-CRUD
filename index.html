@@ -285,6 +285,7 @@
                         } else {
                             this.kvnamespaceList = res.data;
                             this.searchData.kv = res.data[0].value;
+                            sessionStorage.setItem('kv', res.data[0].value);
                         }
                     },
                     async getTableData() {
