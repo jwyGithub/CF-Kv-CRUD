@@ -11,22 +11,6 @@ class KVController {
         this.kv = kv;
     }
 
-    async setKvConfig(config: { key: string; valueType: string }) {
-        const preConfig = (await this.getKvConfig()) || [];
-        const item = preConfig.find((item: { key: string }) => item.key === config.key);
-        if (item) {
-            item.valueType = config.valueType;
-        } else {
-            preConfig.push(config);
-        }
-        await this.kv.put(this.kvConfigKey, JSON.stringify(preConfig));
-    }
-
-    async getKvConfig(): Promise<Array<{ key: string; valueType: string }>> {
-        const config = (await this.kv.get(this.kvConfigKey)) || '[]';
-        return JSON.parse(config);
-    }
-
     async hasKey(key: string): Promise<boolean> {
         const keys = await this.getKeys();
         return keys.includes(key);
@@ -50,7 +34,6 @@ class KVController {
             if (await this.hasKey(key)) {
                 throw new Error(`Key ${key} already exists`);
             }
-            await this.setKvConfig({ key, valueType: VALUE_TYPE.TEXT });
             await this.kv.put(key, value, options);
         } catch (error: any) {
             throw new Error(error);
@@ -91,12 +74,11 @@ class KVController {
     async updateItem(
         key: string,
         value: string | ArrayBuffer | ArrayBufferView | ReadableStream,
-        valueType: string = VALUE_TYPE.TEXT,
         options?: KVNamespacePutOptions
     ): Promise<void> {
         try {
-            await this.setKvConfig({ key, valueType });
-            await this.kv.put(key, value, options);
+            const { metadata } = await this.kv.getWithMetadata(key);
+            await this.kv.put(key, value, { ...options, metadata });
         } catch (error: any) {
             throw new Error(error);
         }
@@ -112,13 +94,9 @@ class KVController {
      */
     async getItem<T>(key: string, ...options: any[]): Promise<{ value: T | null; valueType: string }> {
         try {
-            const kvConfig = await this.getKvConfig();
-            const config = kvConfig.find((item: { key: string }) => item.key === key);
             const value = await this.kv.get<T>(key, ...options);
-            return {
-                value,
-                valueType: config?.valueType || VALUE_TYPE.TEXT
-            };
+            const { metadata } = await this.kv.getWithMetadata<Record<string, any>>(key);
+            return { value, valueType: metadata!.valueType };
         } catch (error: any) {
             throw new Error(error);
         }
@@ -173,23 +151,32 @@ class KVController {
         }
     }
 
-    async getAll(): Promise<Record<'key' | 'value', string | null | ArrayBuffer>[]> {
-        const kvConfig = await this.getKvConfig();
+    async getAll(): Promise<
+        Array<{
+            key: string;
+            value: string | ArrayBuffer | ArrayBufferView | ReadableStream | null;
+            valueType: string;
+        }>
+    > {
         const { keys } = await this.kv.list();
-        const filterKeys = keys.filter(key => key.name !== this.kvConfigKey);
-        const values = await Promise.all(
-            filterKeys.map(key => {
-                const { valueType } = kvConfig.find((item: { key: string }) => item.key === key.name) || { valueType: VALUE_TYPE.TEXT };
-                return valueType === VALUE_TYPE.TEXT ? this.kv.get(key.name, 'text') : this.kv.get(key.name, 'arrayBuffer');
-            })
-        );
 
-        return filterKeys.map((key, index) => {
-            return {
+        const result: Array<{
+            key: string;
+            value: string | ArrayBuffer | ArrayBufferView | ReadableStream | null;
+            valueType: string;
+        }> = [];
+
+        for await (const key of keys) {
+            const { value, metadata } = await this.kv.getWithMetadata<Record<string, any>>(key.name);
+            const valueType = metadata?.valueType ?? VALUE_TYPE.TEXT;
+            result.push({
                 key: key.name,
-                value: values[index] instanceof ArrayBuffer ? '暂不支持查看，请下载后查看' : values[index]
-            };
-        });
+                value: valueType === VALUE_TYPE.TEXT ? value : '暂不支持查看，请下载后查看',
+                valueType
+            });
+        }
+
+        return result;
     }
 
     /**
@@ -198,8 +185,7 @@ class KVController {
      */
     async getKeys(): Promise<string[]> {
         const { keys } = await this.kv.list();
-        const filterKeys = keys.filter(key => key.name !== this.kvConfigKey);
-        return filterKeys.map(key => key.name);
+        return keys.map(key => key.name);
     }
 }
 

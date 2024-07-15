@@ -85,11 +85,11 @@ export default [
                     return ServiceResponse.onBadRequest('KEY Not Found');
                 }
                 const kvController = new KVController(env[request.headers.get('kv')!]);
-                const { value } = await kvController.getItem<string>(key);
+                const { value, valueType } = await kvController.getItem<string>(key);
                 if (value === null) {
                     return ServiceResponse.onNotFound('Not Found');
                 }
-                return ServiceResponse.onSuccessJson({ key, value });
+                return ServiceResponse.onSuccessJson({ key, value, valueType });
             } catch (error: any) {
                 return ServiceResponse.onError(error.message);
             }
@@ -121,7 +121,7 @@ export default [
                 }
 
                 const kvController = new KVController(env[request.headers.get('kv')!]);
-                await kvController.updateItem(body.key, body.value, VALUE_TYPE.TEXT);
+                await kvController.updateItem(body.key, body.value);
                 const updatedValue = await kvController.getItem(body.key);
                 return ServiceResponse.onSuccessJson({ key: body.key, value: updatedValue });
             } catch (error: any) {
@@ -154,9 +154,9 @@ export default [
                 }
 
                 const kvController = new KVController(env[request.headers.get('kv')!]);
-                await kvController.addItem(body.key, body.value);
-                const { value } = await kvController.getItem(body.key);
-                return ServiceResponse.onSuccessJson({ key: body.key, value });
+                await kvController.addItem(body.key, body.value, { metadata: { timestamp: Date.now(), valueType: VALUE_TYPE.TEXT } });
+                const { value, valueType } = await kvController.getItem(body.key);
+                return ServiceResponse.onSuccessJson({ key: body.key, value, valueType });
             } catch (error: any) {
                 return ServiceResponse.onError(error.message);
             }
@@ -290,7 +290,7 @@ export default [
                 const fileContent = new Uint8Array(arrayBuffer);
 
                 const kvController = new KVController(env[request.headers.get('kv')!]);
-                await kvController.updateItem(fileName, fileContent, VALUE_TYPE.STREAM);
+                await kvController.addItem(fileName, fileContent, { metadata: { timestamp: Date.now(), valueType: VALUE_TYPE.STREAM } });
                 const { origin } = new URL(request.url);
                 return ServiceResponse.onSuccessJson({
                     fileName,
@@ -346,6 +346,33 @@ export default [
 
         beforeEnter(check, CheckEnter) {
             if (!check.method('GET')) {
+                return CheckEnter.rejectMethodEnter();
+            }
+
+            if (!check.token()) {
+                return CheckEnter.rejectTokenEnter();
+            }
+
+            if (!check.kv()) {
+                return CheckEnter.rejectNotKVEnter();
+            }
+
+            return CheckEnter.acceptEnter();
+        }
+    },
+    {
+        path: '/api/clear',
+        async excute(request, env) {
+            try {
+                const kvController = new KVController(env[request.headers.get('kv')!]);
+                await kvController.clear();
+                return ServiceResponse.onSuccessJson();
+            } catch (error: any) {
+                return ServiceResponse.onError(error.message);
+            }
+        },
+        beforeEnter(check, CheckEnter) {
+            if (!check.method('POST')) {
                 return CheckEnter.rejectMethodEnter();
             }
 
