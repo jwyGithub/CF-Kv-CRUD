@@ -5,7 +5,6 @@ export const VALUE_TYPE = {
 
 class KVController {
     private kv: KVNamespace<string>;
-    private kvConfigKey: string = 'KV_NAMESPACE_CONFIG';
     constructor(kv: KVNamespace) {
         if (!kv) throw new Error('KV Namespace not found');
         this.kv = kv;
@@ -34,7 +33,11 @@ class KVController {
             if (await this.hasKey(key)) {
                 throw new Error(`Key ${key} already exists`);
             }
-            await this.kv.put(key, value, options);
+            await this.kv.put(key, value, {
+                ...options,
+                expirationTtl: options?.expirationTtl ?? 60,
+                expiration: options?.expiration ?? 60
+            });
         } catch (error: any) {
             throw new Error(error);
         }
@@ -77,7 +80,7 @@ class KVController {
         options?: KVNamespacePutOptions
     ): Promise<void> {
         try {
-            const { metadata } = await this.kv.getWithMetadata(key);
+            const { metadata } = await this.kv.getWithMetadata(key, { ...options, cacheTtl: 60 });
             await this.kv.put(key, value, { ...options, metadata });
         } catch (error: any) {
             throw new Error(error);
@@ -95,7 +98,7 @@ class KVController {
     async getItem<T>(key: string, ...options: any[]): Promise<{ value: T | null; valueType: string }> {
         try {
             const value = await this.kv.get<T>(key, ...options);
-            const { metadata } = await this.kv.getWithMetadata<Record<string, any>>(key);
+            const { metadata } = await this.kv.getWithMetadata<Record<string, any>>(key, { cacheTtl: 60 });
             return { value, valueType: metadata!.valueType };
         } catch (error: any) {
             throw new Error(error);
@@ -167,7 +170,7 @@ class KVController {
         }> = [];
 
         for await (const key of keys) {
-            const { value, metadata } = await this.kv.getWithMetadata<Record<string, any>>(key.name);
+            const { value, metadata } = await this.kv.getWithMetadata<Record<string, any>>(key.name, { cacheTtl: 60 });
             const valueType = metadata?.valueType ?? VALUE_TYPE.TEXT;
             result.push({
                 key: key.name,

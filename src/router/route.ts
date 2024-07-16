@@ -9,7 +9,7 @@ export default [
         path: '/',
         async excute(request, _env) {
             try {
-                const HOME_PAGE = _env.HOME_PAGE || 'https://raw.githubusercontent.com/jwyGithub/cf-kv-crud/main/index.html';
+                const HOME_PAGE = _env.HOME_PAGE || 'https://kv-crud.visitor-worker.workers.dev/kv-static/static/index.html';
                 const indexHtml = await fetch(HOME_PAGE).then(res => res.text());
                 return new Response(indexHtml, {
                     status: 200,
